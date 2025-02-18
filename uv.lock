@@ -1,0 +1,7 @@
+version = 1
+requires-python = ">=3.11"
+
+[[package]]
+name = "coleta-dados-resident-evil"
+version = "0.1.0"
+source = { virtual = "." }
