@@ -11,3 +11,6 @@ wheels/
 
 # arquivos .py desnecessários
 hello.py
+
+# headers
+src/headers.json
