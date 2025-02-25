@@ -1,7 +1,9 @@
 #%%
 import requests
 import json
-import pandas as pd
+# import pandas as pd
+import polars as pl
+from tqdm import tqdm
 from bs4 import BeautifulSoup
 #%%
 def get_content(url: str) -> requests.Response:
@@ -59,7 +61,7 @@ def get_basics_info(soup: BeautifulSoup) -> dict:
     for info in ems:
         # info.text.split(':') retorna uma lista de 2 elementos, correspondendo a chave e ao valor
         # que já fazemos o unpacking
-        chave, valor = info.text.split(':')
+        chave, valor, *_ = info.text.split(':')
         
         # removendo os espacos em branco e os '.' do valor
         chave = chave.strip()
@@ -80,13 +82,27 @@ def get_appearances(soup: BeautifulSoup) -> list:
     """
     # se eu uso parenteses, consigo encadear metodos em linhas diferentes, igual usando o operador '/'
     lis = (soup.find('div', class_='td-page-content')
-            .find('h4')
-            .find_next()
-            .find_all('li'))
+               .find('h4')
+               .find_next()
+               .find_all('li'))
 
     # criando a lista de aparicoes
     aparicoes = [li.text for li in lis]
     return aparicoes
+#%%
+def get_links() -> list:
+    
+    # pegando as urls de cada personagem da serie
+    base_url = 'https://www.residentevildatabase.com/personagens/'
+    response = get_content(base_url)
+
+    # lista com a url de todos os personagens
+    soup_links = (BeautifulSoup(response.text, 'html.parser').find('div', class_='td-page-content')
+                                                             .find_all('a'))
+
+    links = [link['href'] for link in soup_links]
+
+    return links
 #%%
 def collect_data(url: str) -> dict:
     """
@@ -104,7 +120,8 @@ def collect_data(url: str) -> dict:
     response = get_content(url)
 
     if response.status_code == 200:
-        print('Requisição bem sucedida.')
+        print(f'Requisição bem sucedida para url = {url}.')
+        
         # pegando o html e convertendo em um objeto inspecionável pelo Python
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -119,9 +136,33 @@ def collect_data(url: str) -> dict:
     else:
         print(f'Erro na requisição: {response.status_code}')
         return {}
+#%%
+
+url_list = get_links()
+
+# lista para guardar os dicionarios de infos de cada personagem
+data = []
+
+# a funcao tqdm cria uma barra de progresso na tela
+# ela re
+# cebe como argumento um iteravel
+for url in tqdm(url_list):
+    # pega o dado para cada personagem e retorna num dict
+    dict_character = collect_data(url)
+
+    # quebra a url e pega o nome do personagem, que fica entre as 
+    # duas ultimas barras
+    character_name = url.split('/')[-2].replace('-', ' ')
+
+    # adiciona chave Name com o nome do personagem
+    dict_character['Name'] = character_name
+
+    # adiciona chave URL com o link do personagem
+    dict_character['URL'] = url
+
+    # adiciona o dict a lista
+    data.append(dict_character)
 
 #%%
-url = 'https://www.residentevildatabase.com/personagens/ada-wong/'
-
-characters_data = collect_data(url)
-characters_data
+df = pl.DataFrame(data)
+df.head()
