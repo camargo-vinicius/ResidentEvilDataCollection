@@ -20,6 +20,7 @@ packaging==24.2
 pandas==2.2.3
 parso==0.8.4
 platformdirs==4.3.6
+polars==1.23.0
 prompt-toolkit==3.0.50
 psutil==7.0.0
 pure-eval==0.2.3
@@ -33,6 +34,7 @@ six==1.17.0
 soupsieve==2.6
 stack-data==0.6.3
 tornado==6.4.2
+tqdm==4.67.1
 traitlets==5.14.3
 typing-extensions==4.12.2
 tzdata==2025.1
